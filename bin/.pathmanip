@@ -1,0 +1,126 @@
+#!/bin/bash
+
+function env_del() {
+	VNAME="$2"
+	DISABLE="$3"
+	EXPORTFILE="$1"
+	REGEX_COMPONENT="$(echo $DISABLE | sed -e 's/[]\/$*.^|[]/\\&/g')"
+	REGEX="^(([^:]+[:])*)${REGEX_COMPONENT}(([:][^:]+)*)$" > /dev/null
+
+	if (eval echo \$$VNAME | tr ':' $'\n' | grep -E "^${DISABLE}\$" > /dev/null) ; then
+		echo "editting $VNAME" >> /dev/null
+	else 
+		return
+	fi
+	newval="$(eval echo -n \$$VNAME | tr ':' $'\n' | grep -vE "^${DISABLE}\$" | tr $'\n' ':' | sed 's#:$##g')"
+	echo "export \"$VNAME\"=\"$newval\"" >> "${EXPORTFILE}"
+}
+function env_add() {
+	VNAME="$2"
+	ENABLE="$3"
+	EXPORTFILE="$1"
+
+	if ! [[ -d "$ENABLE" ]] ; then return; fi
+
+	newval=$(echo "${ENABLE}:$(eval echo -n \$$VNAME | tr ':' $'\n' | grep -vE "^${ENABLE}\$" | tr $'\n' ':')" | sed 's#:$##g')
+	echo "export \"$VNAME\"=\"$newval\"" >> "${EXPORTFILE}"
+	echo "editting $VNAME" >> /dev/null
+}
+function comp_add() {
+	ENABLE="$2"
+	EXPORTFILE="$1"
+
+	if ! [[ -d "$ENABLE" ]] ; then return; fi
+	if ! [[ -r "$ENABLE" ]] ; then return; fi
+	if ! [[ -x "$ENABLE" ]] ; then return; fi
+
+	for i in $( LC_ALL=C command ls "$ENABLE" ); do
+		i="$ENABLE/$i"
+		[[ ${i##*/} != @($_backup_glob|Makefile*|$_blacklist_glob) \
+			&& -f $i && -r $i ]] && \
+		echo "source \"$i\"" >> "${EXPORTFILE}"
+	done
+}
+
+
+function try_disable () {
+	env_del "$2" LD_LIBRARY_PATH "$1"/lib
+	env_del "$2" LD_LIBRARY_PATH "$1"/lib64
+	env_del "$2" LIBRARY_PATH "$1"/lib
+	env_del "$2" LIBRARY_PATH "$1"/lib64
+	env_del "$2" PKG_CONFIG_PATH "$1"/lib/pkgconfig
+	env_del "$2" PKG_CONFIG_PATH "$1"/lib64/pkgconfig
+	env_del "$2" CMAKE_PREFIX_PATH "$1"/lib/cmake
+	env_del "$2" CMAKE_PREFIX_PATH "$1"/lib64/cmake
+        env_del "$2" SYSTEMD_UNIT_PATH "$1"/lib/systemd/user
+        env_del "$2" PATH "$1"/bin
+        env_del "$2" C_INCLUDE_PATH "$1"/include
+        env_del "$2" CPLUS_INCLUDE_PATH "$1"/include
+        env_del "$2" XDG_DATA_DIRS "$1"/share
+        env_del "$2" XDG_DATA_HOME "$1"/share
+        env_del "$2" MANPATH "$1"/share/man
+}
+function try_enable () {
+        env_add "$2" LD_LIBRARY_PATH "$1"/lib
+        env_add "$2" LD_LIBRARY_PATH "$1"/lib64
+        env_add "$2" LIBRARY_PATH "$1"/lib
+        env_add "$2" LIBRARY_PATH "$1"/lib64
+        env_add "$2" PKG_CONFIG_PATH "$1"/lib/pkgconfig
+        env_add "$2" PKG_CONFIG_PATH "$1"/lib64/pkgconfig
+        env_add "$2" CMAKE_PREFIX_PATH "$1"/lib/cmake
+        env_add "$2" CMAKE_PREFIX_PATH "$1"/lib64/cmake
+        env_add "$2" SYSTEMD_UNIT_PATH "$1"/lib/systemd/user
+        env_add "$2" PATH "$1"/bin
+        env_add "$2" C_INCLUDE_PATH "$1"/include
+        env_add "$2" CPLUS_INCLUDE_PATH "$1"/include
+        env_add "$2" XDG_DATA_DIRS "$1"/share
+        env_add "$2" MANPATH "$1"/share/man
+        comp_add "$2" "$1"/share/bash-completion/completions
+}
+
+BASE="${HOME}/.local"
+BASE_ENABLED="${BASE}/enabled"
+
+function do_droppath(){
+	MOD="${BASE}/$1"
+	EMOD="${BASE_ENABLED}/$1"
+
+	if [ "x$1" = "x" ] ; then
+		echo Argument which module to del is required 1>&2
+		exit 1
+	fi
+
+	try_disable "$EMOD" "$2" || try_disable "$MOD" "$2" || try_disable "$1" "$2"
+}
+function do_addpath(){
+	MOD="${BASE}/$1"
+	EMOD="${BASE_ENABLED}/$1"
+
+	if [ "x$1" = "x" ] ; then
+		echo Argument which module to add is required 1>&2
+		exit 1
+	fi
+
+	if  [ -d "${EMOD}" ] ; then
+		try_enable "$EMOD" "$2"
+	elif [ -d "$MOD" ] ; then
+		try_enable "$MOD" "$2"
+	elif [ -d "$1" ] ; then
+		try_enable "$1" "$2"
+	else
+		echo "path does not exist either as module, or as idependent path" 1>&2
+	fi
+}
+
+
+case "$1" in
+	droppath)
+		do_droppath "$2" "$3"
+		;;
+	addpath)
+		do_addpath "$2" "$3"
+		;;
+	*)
+		echo "invalid commaned for pathmanip script" >&2
+		;;
+esac

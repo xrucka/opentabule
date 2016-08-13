@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set +vx
+
+overridename="$1"
+overridedir="${HOME}/.local/bash-completion-${overridename}/share/bash-completion/completions"
+
+if ! [[ -d "$overridedir" ]] ; then 
+	overridedir="${HOME}/.local/${overridename}/share/bash-completion/completions"
+fi
+if ! [[ -d "$overridedir" ]] ; then 
+	exit 1
+fi
+
+overridefile="/tmp/clean-completions-${overridename}-$$"
+overridesys="/tmp/clean-completions-system-$$"
+
+pushd /usr/share/bash-completion/completions
+find . -type f | sort > "$overridesys"
+popd
+pushd "$overridedir"
+find . -type f | sort > "$overridefile"
+
+comm -1 -2 "$overridefile" "$overridesys" | ( while read COMPFILE ; do rm "$COMPFILE" ; done )
+
+#rm "$overridefile"
+#rm "$overridesys"
+
+set -vx

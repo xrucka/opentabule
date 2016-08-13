@@ -1,0 +1,3 @@
+#!/bin/bash
+CMD_PREFIX=$( tty -s && echo "bash -c" || echo "lxterminal --command bash -c ")
+eval "${CMD_PREFIX}" "\"echo 'Launching broadcast' ; gst-launch-1.0 -v pulsesrc device = combined.monitor ! audio/x-raw,channels=2 ! queue ! faac ! mpegtsmux ! rtpmp2tpay ! udpsink host = tabule.lan port = 5004\""

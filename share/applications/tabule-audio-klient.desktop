@@ -1,0 +1,7 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Klient síťového audia
+Exec=tabule-autio-client
+Icon=audio-speakers
+StartupNotify=true
+Type=Application
