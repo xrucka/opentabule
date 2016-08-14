@@ -27,6 +27,13 @@ function env_add() {
 	echo "editting $VNAME" >> /dev/null
 }
 function comp_add() {
+	# following block is copied from debian's bashrc
+	# If not running interactively, don't do anything
+	case $- in
+	    *i*) ;;
+	      *) return;;
+	esac
+
 	ENABLE="$2"
 	EXPORTFILE="$1"
 
