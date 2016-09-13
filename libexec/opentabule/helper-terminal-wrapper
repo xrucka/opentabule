@@ -1,0 +1,18 @@
+#!/bin/bash
+
+HELPER="$(dirname "$0")/../libexec/opentabule/$(basename "$0")"
+
+if ! test -x "${HELPER}" ; then
+	echo "Invalid helper call: ${HELPER}" 1>&2
+	exit 1;
+fi
+
+
+TERMINAL="$( test "x${TERMINAL}" != "x" && echo "${TERMINAL}" || (which x-terminal-emulator || which xdg-terminal || which mate-terminal || which gnome-terminal || which lxterminal || echo xterm) 2>/dev/null )"
+
+if tty -s ; then
+	"${HELPER}" "$@"
+else
+ 	"${TERMINAL}" --execute "${HELPER}" "$@"
+fi
+

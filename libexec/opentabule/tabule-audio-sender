@@ -1,0 +1,15 @@
+#!/bin/bash
+HOST="$1"
+if [ "x${HOST}" = "x" ] ; then
+	HOST="tabule.lan"
+fi
+
+# resolve ipv4 addr, as gstreamer preffers system default - due to vlc bug
+HOST="$(getent ahostsv4 tabule.lan | grep DGRAM | cut -d' ' -f1 2>/dev/null)"
+if [ "x$HOST" = x ] ; then
+	echo "could not resolve DGRAM ipv4 host" 1>&2
+	exit 1
+fi
+
+echo 'Launching broadcast'
+gst-launch-1.0 -v pulsesrc device = combined.monitor ! audio/x-raw,channels=2 ! queue ! faac ! mpegtsmux ! rtpmp2tpay ! udpsink host = "${HOST}" port = 5004

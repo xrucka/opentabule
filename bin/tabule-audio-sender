@@ -1,7 +1,1 @@
-#!/bin/bash
-HOST="$1"
-if [ "x${HOST}" = "x" ] ; then
-	HOST="tabule.lan"
-fi
-CMD_PREFIX=$( tty -s && echo "bash -c" || echo "mate-terminal --command bash -c ")
-eval "${CMD_PREFIX}" "\"echo 'Launching broadcast' ; gst-launch-1.0 -v pulsesrc device = combined.monitor ! audio/x-raw,channels=2 ! queue ! faac ! mpegtsmux ! rtpmp2tpay ! udpsink force-ipv4 = 1 host = tabule.lan port = 5004\""
+../libexec/opentabule/helper-terminal-wrapper

@@ -4,16 +4,16 @@ SYSTEMD_UNIT_PATH="${SYSTEMD_UNIT_PATH}:"
 export SYSTEMD_UNIT_PATH
 
 function droppath() {
-	EXPORTFILE="${HOME}/.local/pathmanip-${RANDOM}"
+	EXPORTFILE="${HOME}/.local/scripts/libexec/opentabule/pathmanip-${RANDOM}"
 	touch "${EXPORTFILE}"
-	"${HOME}"/.local/scripts/bin/.pathmanip droppath $1 "${EXPORTFILE}"
+	"${HOME}"/.local/scripts/libexec/opentabule/pathmanip droppath $1 "${EXPORTFILE}"
 	source ${EXPORTFILE}
 	rm "${EXPORTFILE}"
 }
 function addpath() {
-	EXPORTFILE="${HOME}/.local/pathmanip-${RANDOM}"
+	EXPORTFILE="${HOME}/.local/scripts/libexec/opentabule/pathmanip-${RANDOM}"
 	touch "${EXPORTFILE}"
-	"${HOME}"/.local/scripts/bin/.pathmanip addpath "$1" "${EXPORTFILE}"
+	"${HOME}"/.local/scripts/libexec/opentabule/pathmanip addpath "$1" "${EXPORTFILE}"
 	source ${EXPORTFILE}
 	rm "${EXPORTFILE}"
 }
