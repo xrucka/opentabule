@@ -1,4 +1,3 @@
-#!/usr/bin/env xdg-open
 [Desktop Entry]
 Name=Klient síťového audia
 Exec=tabule-autio-client

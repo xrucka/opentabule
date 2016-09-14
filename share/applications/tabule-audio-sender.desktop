@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Vysílač síťového audia
+Exec=/home/hlediko/.local/scripts/bin/tabule-audio-sender
+Icon=audio-speakers
+StartupNotify=true
+Type=Application
