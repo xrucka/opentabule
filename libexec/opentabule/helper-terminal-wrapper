@@ -1,5 +1,49 @@
 #!/bin/bash
 
+function term_help(){
+	local TERMINAL="$1"
+	(man "$(basename "${TERMINAL}")" || "${TERMINAL}" --help-all || "${TERMINAL}" -help) 2>/dev/null
+	return $?
+}
+
+function term_help_has() {
+	local optargument='((=|[[:space:]])[a-zA-Z]+)?'
+	local fragment="-[-a-z]+$optargument"
+	local sep='(,|[[:space:]])'
+#	echo grep -E "^[[:space:]]*(${fragment}${sep})*$1$optargument(${sep}${fragment})*\$" 1>&2
+	#sed -r 's#\[[^]]+\]##g' | grep -E "^[[:space:]]*(${fragment}${sep})*$1$optargument(${sep}${fragment})*\$" 2>/dev/null 1>&2
+	grep -E '^[[:space:]]*-.*$' | tr $'\t ,' $'\n\n\n' | grep -E "^$1\$" 2>/dev/null 1>&2
+	return $?
+}
+
+function guess_terminal() {
+	local TERMINAL="$1"
+	local TERMINAL_CLASS="xterm"
+
+	case "${TERMINAL}" in
+	*/gnome-terminal|*/xterm|*/lxterminal )
+		TERMINAL_CLASS=xterm
+		;;
+	*/mate-terminal )
+		TERMINAL_CLASS=mate
+		;;
+	*/xdg-terminal )
+		TERMINAL_CLASS=xdg
+		;;
+	*)
+		if (term_help "${TERMINAL}" | term_help_has "-x") ; then
+			TERMINAL_CLASS="mate"
+		elif (term_help "${TERMINAL}" | term_help_has "-e") ; then
+			TERMINAL_CLASS="xterm"
+		else
+			TERMINAL_CLASS="xdg"
+		fi
+		;;
+	esac
+	
+	echo "${TERMINAL_CLASS}"
+}
+
 HELPER="$(dirname "$0")/../libexec/opentabule/$(basename "$0")"
 
 if ! test -x "${HELPER}" ; then
@@ -7,12 +51,22 @@ if ! test -x "${HELPER}" ; then
 	exit 1;
 fi
 
-
-TERMINAL="$( test "x${TERMINAL}" != "x" && echo "${TERMINAL}" || (which x-terminal-emulator || which xdg-terminal || which mate-terminal || which gnome-terminal || which lxterminal || echo xterm) 2>/dev/null )"
-
 if tty -s ; then
-	"${HELPER}" "$@"
-else
- 	"${TERMINAL}" --execute "${HELPER}" "$@"
+	exec "${HELPER}" "$@"
 fi
 
+TERMINAL=$(which x-terminal-emulator xdg-terminal terminal mate-terminal gnome-terminal lxterminal xterm 2>/dev/null | head -n 1)
+TERMINAL_CLASS=$(guess_terminal "${TERMINAL}")
+echo "found terminal $TERMINAL, class ${TERMINAL_CLASS}"
+
+case "${TERMINAL_CLASS}" in
+xterm )
+	exec "${TERMINAL}" -e "${HELPER}" "$@"
+	;;
+mate )
+	exec "${TERMINAL}" -x "${HELPER}" "$@"
+	;;
+xdg )
+	exec "${TERMINAL}" "${HELPER}" "$@"
+	;;
+esac
