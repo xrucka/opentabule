@@ -1,24 +1,5 @@
 #!/bin/bash
 
-# vlc claims ipv6 unsupported
-#PROTO="$(ip -6 addr show | grep inet6 | grep -v ' fe80:' | grep -v ' ::1' 2>/dev/null  1>&2 && echo 'rtp6://' || echo 'rtp://')"
-#if test "x${1}" = "x-4" ; then
-	PROTO='rtp://'
-#	shift
-#fi
+echo 'Playing rtp on udp port 5004. Sender example: gst-launch-1.0 -v pulsesrc device = combined.monitor ! audio/x-raw,channels=2 ! queue min-threshold-time = 1000000000 ! opusenc ! rtpopuspay ! udpsink host = tabule.lan port = 5004'
 
-HOST='@'
-if test "x$1" = "x--host" ; then
-	HOST="$2"
-	shift 2
-fi
-
-PORT='5004'
-if test "x$1" = "x--port" ; then
-	PORT="$2"
-	shift 2
-fi
-
-echo 'Playing rtp on udp port 5004. Sender example: gst-launch-1.0 -v pulsesrc device = combined.monitor ! audio/x-raw,channels=2 ! queue ! faac ! mpegtsmux ! rtpmp2tpay ! udpsink host = tabule.lan port = 5004'
-
-cvlc "${PROTO}${HOST}:${PORT}" 
+gst-launch-1.0 udpsrc caps = "application/x-rtp\,\ media\=audio\,\ clock-rate\=48000\,\ encoding-name\=OPUS\,\ payload\=96" ! queue ! rtpopusdepay ! opusdec ! pulsesink
