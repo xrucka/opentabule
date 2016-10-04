@@ -43,12 +43,31 @@ function comp_add() {
 
 	for i in $( LC_ALL=C command ls "$ENABLE" ); do
 		i="$ENABLE/$i"
-		[[ ${i##*/} != @($_backup_glob|Makefile*|$_blacklist_glob) \
-			&& -f $i && -r $i ]] && \
+#		[[ ${i##*/} != @($_backup_glob|Makefile*|$_blacklist_glob) \
+#			&& -f $i && -r $i ]] && \
+#		echo "source \"$i\"" >> "${EXPORTFILE}"
+		[[ -f $i && -r $i ]] && \
 		echo "source \"$i\"" >> "${EXPORTFILE}"
 	done
 }
+function py_add() {
+	if ! [[ -d "$2" ]] ; then
+		return 0;
+	fi
 
+	find "$2" -maxdepth 1 -mindepth 1 -type d -name "python*" | while read -r python ; do
+                [ -n "$python" ] && ( for path in "$(find "$python" -maxdepth 1 -mindepth 1 -type d )" ; do env_add "$1" PYTHONPATH "$path" ; done )
+	done
+}
+function py_del() {
+	if ! [ -d "$2" ] ; then
+		return 0;
+	fi
+
+	find "$2" -maxdepth 1 -mindepth 1 -type d -name "python*" | while read -r python ; do
+		[ -n "$python" ] && ( for path in "$(find "$python" -maxdepth 1 -mindepth 1 -type d )" ; do env_del "$1" PYTHONPATH "$path" ; done )
+	done
+}
 
 function try_disable () {
 	env_del "$2" LD_LIBRARY_PATH "$1"/lib
@@ -66,6 +85,7 @@ function try_disable () {
         env_del "$2" XDG_DATA_DIRS "$1"/share
         env_del "$2" XDG_DATA_HOME "$1"/share
         env_del "$2" MANPATH "$1"/share/man
+        py_del  "$2" "$1"/lib
 }
 function try_enable () {
         env_add "$2" LD_LIBRARY_PATH "$1"/lib
@@ -83,6 +103,7 @@ function try_enable () {
         env_add "$2" XDG_DATA_DIRS "$1"/share
         env_add "$2" MANPATH "$1"/share/man
         comp_add "$2" "$1"/share/bash-completion/completions
+        py_add  "$2" "$1"/lib
 }
 
 BASE="${HOME}/.local"

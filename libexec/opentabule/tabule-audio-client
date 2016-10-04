@@ -2,4 +2,4 @@
 
 echo 'Playing rtp on udp port 5004. Sender example: gst-launch-1.0 -v pulsesrc device = combined.monitor ! audio/x-raw,channels=2 ! queue min-threshold-time = 1000000000 ! opusenc ! rtpopuspay ! udpsink host = tabule.lan port = 5004'
 
-gst-launch-1.0 udpsrc caps = "application/x-rtp\,\ media\=audio\,\ clock-rate\=48000\,\ encoding-name\=OPUS\,\ payload\=96" ! queue ! rtpopusdepay ! opusdec ! pulsesink
+gst-launch-1.0 udpsrc port = 5004 caps = "application/x-rtp\,\ media\=audio\,\ clock-rate\=48000\,\ encoding-name\=OPUS\,\ payload\=96" ! queue ! rtpopusdepay ! opusdec ! pulsesink
