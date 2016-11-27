@@ -1,0 +1,48 @@
+#!/usr/bin/python3
+import sys
+try:
+	import RPi.GPIO as GPIO
+except RuntimeError:
+	print("Error importing RPi.GPIO!")
+
+def GPIOLight(commands):
+	lightControlPin=17
+
+	mode = GPIO.getmode()
+	if (mode == GPIO.BOARD):
+		print("Bad board mode", mode)
+		return
+
+	GPIO.setmode(GPIO.BCM)
+	GPIO.setup(lightControlPin, GPIO.OUT)
+
+
+	def controlLight(state):
+		value = GPIO.LOW
+
+		if (state == 0):
+			value = GPIO.LOW
+		elif (state == "off"):
+			value = GPIO.LOW
+		elif (state == 1):
+			value = GPIO.HIGH
+		elif (state == "on"):
+			value = GPIO.HIGH
+		elif (state == "toggle"):
+			value = not GPIO.input(lightControlPin)
+		else:
+			print("unknown state", state)
+			return
+
+		GPIO.output(lightControlPin, value)
+
+	for command in commands:
+		controlLight(command)
+
+if __name__ == "__main__":
+	if (len(sys.argv) == 1):
+		cmd = sys.argv[0].split("/")[-1].split("-")[-1]
+		GPIOLight([cmd])
+	else:
+		GPIOLight(sys.argv[1:])
+	sys.exit(0)
