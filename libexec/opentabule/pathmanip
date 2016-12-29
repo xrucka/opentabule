@@ -12,8 +12,8 @@ function env_del() {
 	else 
 		return
 	fi
-	newval="$(eval echo -n \$$VNAME | tr ':' $'\n' | grep -vE "^${DISABLE}\$" | tr $'\n' ':' | sed 's#:$##g')"
-	echo "export \"$VNAME\"=\"$newval\"" >> "${EXPORTFILE}"
+	newval="echo -n \"\$$VNAME\" | tr ':' \$'\n' | grep -vE '^${DISABLE}\$' | tr \$'\n' ':' | sed 's#:\$##g'"
+	echo "export '$VNAME'=\"\$($newval)\"" >> "${EXPORTFILE}"
 }
 function env_add() {
 	VNAME="$2"
@@ -22,8 +22,8 @@ function env_add() {
 
 	if ! [[ -d "$ENABLE" ]] ; then return; fi
 
-	newval=$(echo "${ENABLE}:$(eval echo -n \$$VNAME | tr ':' $'\n' | grep -vE "^${ENABLE}\$" | tr $'\n' ':')" | sed 's#:$##g')
-	echo "export \"$VNAME\"=\"$newval\"" >> "${EXPORTFILE}"
+	newval="echo -n \"${ENABLE}:\$(echo -n \"\$$VNAME\" | tr ':' \$'\n' | grep -vE '^${ENABLE}\$' | tr \$'\n' ':')\" | sed 's#:\$##g'"
+	echo "export '$VNAME'=\"\$($newval)\"" >> "${EXPORTFILE}"
 	echo "editting $VNAME" >> /dev/null
 }
 function comp_add() {
