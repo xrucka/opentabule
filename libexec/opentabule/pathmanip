@@ -50,6 +50,16 @@ function comp_add() {
 		echo "source \"$i\"" >> "${EXPORTFILE}"
 	done
 }
+function sh_add() {
+	ENABLE="$2"
+	EXPORTFILE="$1"
+
+	if ! [[ -f "$ENABLE" ]] ; then return; fi
+	if ! [[ -r "$ENABLE" ]] ; then return; fi
+	if ! [[ -x "$ENABLE" ]] ; then return; fi
+
+	echo "source \"$1\"" >> "${EXPORTFILE}"
+}
 function py_add() {
 	if ! [[ -d "$2" ]] ; then
 		return 0;
@@ -103,6 +113,7 @@ function try_enable () {
         env_add "$2" XDG_DATA_DIRS "$1"/share
         env_add "$2" MANPATH "$1"/share/man
         comp_add "$2" "$1"/share/bash-completion/completions
+        sh_add "$2" "$1"/.bashrc
         py_add  "$2" "$1"/lib
 }
 
@@ -118,7 +129,9 @@ function do_droppath(){
 		exit 1
 	fi
 
-	try_disable "$EMOD" "$2" || try_disable "$MOD" "$2" || try_disable "$1" "$2"
+	try_disable "$EMOD" "$2"
+	try_disable "$MOD" "$2"
+	try_disable "$1" "$2"
 }
 function do_addpath(){
 	MOD="${BASE}/$1"
@@ -136,7 +149,7 @@ function do_addpath(){
 	elif [ -d "$1" ] ; then
 		try_enable "$1" "$2"
 	else
-		echo "path does not exist either as module, or as idependent path" 1>&2
+		echo "path \"$1\" does not exist either as module, or as idependent path" 1>&2
 	fi
 }
 

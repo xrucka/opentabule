@@ -1,19 +1,26 @@
 #!/bin/bash
 # add standard systemd path
+TABULEROOT="${BASH_SOURCE[0]}"
+if [[ "x$TABULEROOT" == "x" ]] ; then
+	echo "Unable to determine opentabule scripts root" 1>&2
+fi
+
+TABULEROOT="$(realpath "$(dirname "$(realpath "$TABULEROOT")")/..")"
+
 SYSTEMD_UNIT_PATH="${SYSTEMD_UNIT_PATH}:"
 export SYSTEMD_UNIT_PATH
 
 function droppath() {
-	EXPORTFILE="${HOME}/.local/scripts/libexec/opentabule/pathmanip-${RANDOM}"
+	EXPORTFILE="${HOME}/.pathmanip-${RANDOM}"
 	touch "${EXPORTFILE}"
-	"${HOME}"/.local/scripts/libexec/opentabule/pathmanip droppath $1 "${EXPORTFILE}"
+	"${TABULEROOT}"/libexec/opentabule/pathmanip droppath $1 "${EXPORTFILE}"
 	source ${EXPORTFILE}
 	rm "${EXPORTFILE}"
 }
 function addpath() {
-	EXPORTFILE="${HOME}/.local/scripts/libexec/opentabule/pathmanip-${RANDOM}"
+	EXPORTFILE="${HOME}/.pathmanip-${RANDOM}"
 	touch "${EXPORTFILE}"
-	"${HOME}"/.local/scripts/libexec/opentabule/pathmanip addpath "$1" "${EXPORTFILE}"
+	"${TABULEROOT}"/libexec/opentabule/pathmanip addpath "$1" "${EXPORTFILE}"
 	source ${EXPORTFILE}
 	rm "${EXPORTFILE}"
 }
