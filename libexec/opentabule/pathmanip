@@ -58,7 +58,7 @@ function sh_add() {
 	if ! [[ -r "$ENABLE" ]] ; then return; fi
 	if ! [[ -x "$ENABLE" ]] ; then return; fi
 
-	echo "source \"$1\"" >> "${EXPORTFILE}"
+	echo "source \"$ENABLE\"" >> "${EXPORTFILE}"
 }
 function py_add() {
 	if ! [[ -d "$2" ]] ; then
