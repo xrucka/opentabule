@@ -96,6 +96,7 @@ function try_disable () {
         env_del "$2" XDG_DATA_HOME "$1"/share
         env_del "$2" MANPATH "$1"/share/man
         py_del  "$2" "$1"/lib
+        py_del  "$2" "$1"/lib64
 }
 function try_enable () {
         env_add "$2" LD_LIBRARY_PATH "$1"/lib
@@ -115,6 +116,7 @@ function try_enable () {
         comp_add "$2" "$1"/share/bash-completion/completions
         sh_add "$2" "$1"/.bashrc
         py_add  "$2" "$1"/lib
+        py_add  "$2" "$1"/lib64
 }
 
 BASE="${HOME}/.local"
