@@ -71,14 +71,28 @@ function enablepath() {
 function disablepath() {
 	local DISABLE="$1"
 	local ENABLEBASE="${HOME}/.local/enabled"
+	local TARGET="."
+	local TARGET_STD="${ENABLEBASE}/../${DISABLE}"
 
-	local RELATIVE="$(realpath --relative-to "${ENABLEBASE}" "${DISABLE}")"
 
+	if [[ -d "${DISABLE}" ]] ; then
+		echo "entry ${DISABLE} found local to $(realpath .)"
+		TARGET="$(realpath "${DISABLE}")"
+	elif [[ -d "${TARGET_STD}" ]] ; then
+		echo "entry ${DISABLE} found local to $(realpath "${ENABLEBASE}/..")"
+		TARGET="${TARGET_STD}"
+	else
+		echo "${DISABLE} not found in any path" 1>&2 
+		return 1;
+	fi
+
+	local RELATIVE="$(realpath --relative-to "${ENABLEBASE}" "${TARGET}")"
 	pushd "$ENABLEBASE" > /dev/null
+
 	for dir in * ; do
 		if ! [[ -d "$dir" ]] ; then continue; fi
 		if ! [[ "x$(realpath --relative-to "${ENABLEBASE}" "${dir}")" = "x$RELATIVE" ]] ; then continue ; fi
-		rm "$dir"
+		rm "$dir" && echo "link $dir dropped"
 	done
 	popd > /dev/null
 
