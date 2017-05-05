@@ -1,40 +1,38 @@
 #!/usr/bin/python3
 import sys
 try:
-	import RPi.GPIO as GPIO
+	from periphery import GPIO
 except RuntimeError:
-	print("Error importing RPi.GPIO!")
+	print("Error importing gpio support (python periphery)!")
 
 def GPIOLight(commands):
-	lightControlPin=17
+	# 458 is gpio pin offset for opensuse kernel
+	# 17 is logical port that light control is connected to
+	lightControlPin=458+17
 
-	mode = GPIO.getmode()
-	if (mode == GPIO.BOARD):
-		print("Bad board mode", mode)
-		return
-
-	GPIO.setmode(GPIO.BCM)
-	GPIO.setup(lightControlPin, GPIO.OUT)
-
+	pin = GPIO(lightControlPin, "preserve")
+	if (pin.direction != "out"):
+		pin = GPIO(lightControlPin, "out")
 
 	def controlLight(state):
-		value = GPIO.LOW
+		value = False
 
 		if (state == 0):
-			value = GPIO.LOW
+			value = False
 		elif (state == "off"):
-			value = GPIO.LOW
+			value = False
 		elif (state == 1):
-			value = GPIO.HIGH
+			value = True
 		elif (state == "on"):
-			value = GPIO.HIGH
+			value = True
 		elif (state == "toggle"):
-			value = not GPIO.input(lightControlPin)
+			value = not pin.read()
 		else:
 			print("unknown state", state)
 			return
 
-		GPIO.output(lightControlPin, value)
+		pin.write(value)
+		pin.close()
 
 	for command in commands:
 		controlLight(command)
