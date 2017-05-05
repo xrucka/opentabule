@@ -10,6 +10,10 @@ TABULEROOT="$(realpath "$(dirname "$(realpath "$TABULEROOT")")/..")"
 SYSTEMD_UNIT_PATH="${SYSTEMD_UNIT_PATH}:"
 export SYSTEMD_UNIT_PATH
 
+# claim cache file
+OPENTABULE_CACHEFILE="${HOME}/.local/enabled/.cache"
+export OPENTABULE_CACHEFILE
+
 function droppath() {
 	EXPORTFILE="${HOME}/.pathmanip-${RANDOM}"
 	touch "${EXPORTFILE}"
@@ -23,6 +27,14 @@ function addpath() {
 	"${TABULEROOT}"/libexec/opentabule/pathmanip addpath "$1" "${EXPORTFILE}"
 	source ${EXPORTFILE}
 	rm "${EXPORTFILE}"
+}
+function rebuildpathcache(){
+	echo "#!/bin/bash" > "${OPENTABULE_CACHEFILE}"
+
+	for dir in ${HOME}/.local/enabled/* ; do
+		if ! [[ -d "$dir" ]] ; then continue; fi
+		"${TABULEROOT}"/libexec/opentabule/pathmanip addpath "$dir" "${OPENTABULE_CACHEFILE}"
+	done
 }
 function enablepath() {
 	local ENABLE="$1"
@@ -51,6 +63,10 @@ function enablepath() {
 
 	ln -s "$(realpath --relative-to "${ENABLEBASE}" "${TARGET}")" "${ENABLEBASE}/${ENABLELINKNAME}"
 	addpath "${ENABLELINKNAME}"
+
+	# build cache
+	rebuildpathcache
+
 }
 function disablepath() {
 	local DISABLE="$1"
@@ -65,13 +81,13 @@ function disablepath() {
 		rm "$dir"
 	done
 	popd > /dev/null
+
+	# build cache
+	rebuildpathcache
 }
 
 
-for dir in ${HOME}/.local/enabled/* ; do
-	if ! [[ -d "$dir" ]] ; then continue; fi
-	addpath $dir
-done
+source "${OPENTABULE_CACHEFILE}"
 
 HISTCONTROL=ignoreboth
 HISTSIZE=10000
