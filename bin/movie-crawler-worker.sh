@@ -57,15 +57,18 @@ case "$cmd" in
 	fi
 	;;&
 "convert" | "unemployed")
+	[[ ! -f "$tmpfile" ]] || err_exit 3 "File is allready processed"
+
 	rm -f "$pidfilename"
 	pid=$$
 	printf "%s %s\n" "$pid" "$filename" > "$pidfilename"
 	
-	tmpfile="$tmpdir/$(basename "$filename").tmp.mkv"
+	tmpfile="$tmpdir/$(basename "$filename").$pid.mkv"
 	tgtfile="$(echo "$filename" | sed -r 's#[.][a-zA-Z0-9]+$#.mkv#g')"
 	nice -n 19 "$ffmpegbinary" -i "$filename" -c:a copy -c:v libx265 -preset veryslow "$tmpfile" || err_exit 1 "FFmpeg failed"
-	echo rm -f "$filename"
 	[[ ! -f "$tgtfile" ]] && mv "$tmpfile" "$tgtfile" || echo "target file still in place!" 1>&2
+	[[ "$tgtfile" != "$filename" ]] && rm "$filename" || echo "original file kept in place!" 1>&2
+
 	rm "$pidfilename"
 	;;
 "pause")
