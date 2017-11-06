@@ -14,6 +14,7 @@ worker="movie-crawler-worker.sh"
 instance=0
 directory=""
 tmpdir="/tmp"
+unrecognized_arguments=()
 
 while [[ $# -gt 0 ]] ; do
 	if [[ "x$1" = "x-h" ]] || [[ "x$1" = "x--help" ]] ; then
@@ -24,6 +25,8 @@ while [[ $# -gt 0 ]] ; do
 		instance="$1"
 	elif [[ "x$directory" = "x" ]] ; then
 		directory="$1"
+	else
+		unrecognized_arguments+=("$1")
 	fi
 	
 	shift
@@ -45,6 +48,6 @@ find "$directory" -regextype posix-extended -iregex '.*[.]((mkv)|(mp4)|(avi)|(vm
 		continue
 	fi
 
-	"$worker" -i "$instance" unemployed "$filename" &
+	"$worker" -i "$instance" "${unrecognized_arguments[@]}" unemployed "$filename" &
 	exit 0
 done

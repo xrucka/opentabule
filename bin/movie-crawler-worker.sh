@@ -16,6 +16,7 @@ function err_exit(){
 binary="$0"
 ffmpegbinary="ffmpeg"
 instance=0
+replace=1
 cmd=""
 filename=""
 tmpdir="/tmp"
@@ -27,6 +28,9 @@ while [[ $# -gt 0 ]] ; do
 	elif [[ "x$1" = "x-i" ]] || [[ "x$1" = "x--instance" ]] ; then
 		shift
 		instance="$1"
+	elif [[ "x$1" = "x-r" ]] || [[ "x$1" = "x--replace" ]] ; then
+		shift
+		replace=0
 	elif [[ "x$cmd" = "x" ]] ; then
 		cmd="$1"
 	elif [[ "x$filename" = "x" ]] ; then
@@ -59,14 +63,20 @@ case "$cmd" in
 "convert" | "unemployed")
 	[[ ! -f "$tmpfile" ]] || err_exit 3 "File is allready processed"
 
-	rm -f "$pidfilename"
 	pid=$$
-	printf "%s %s\n" "$pid" "$filename" > "$pidfilename"
 	
 	tmpfile="$tmpdir/$(basename "$filename").$pid.mkv"
 	tgtfile="$(echo "$filename" | sed -r 's#[.][a-zA-Z0-9]+$#.mkv#g')"
+	
+	anytmpfile="$tmpdir/$(basename "$filename").*.mkv"
+
+	[[ "x$(ls -1 "$tmpdir/$(basename "$filename")".*.mkv 2>/dev/null | head -n 1)" = "x" ]] \
+		|| err_exit 3 "Some other instance is allready processing the file"
+
+	rm -f "$pidfilename"
+	printf "%s %s\n" "$pid" "$filename" > "$pidfilename"
 	nice -n 19 "$ffmpegbinary" -i "$filename" -c:a copy -c:v libx265 -preset veryslow "$tmpfile" || err_exit 1 "FFmpeg failed"
-	[[ ! -f "$tgtfile" ]] && mv "$tmpfile" "$tgtfile" || echo "target file still in place!" 1>&2
+	( [[ ! -f "$tgtfile" ]] || [[ 0 = $replace ]] ) && mv "$tmpfile" "$tgtfile" || echo "target file still in place!" 1>&2
 	[[ "$tgtfile" != "$filename" ]] && rm "$filename" || echo "original file kept in place!" 1>&2
 
 	rm "$pidfilename"
