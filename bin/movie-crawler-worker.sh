@@ -89,6 +89,9 @@ case "$cmd" in
 	# signal pid from pidfile
 	kill -s SIGCONT "$pid"
 	;;
+*)
+	err_exit 5 "Unrecognized command \"$cmd\""
+	;;
 esac 
 
 exit 0
