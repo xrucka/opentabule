@@ -23,7 +23,7 @@ while [[ $# -gt 0 ]] ; do
 	elif [[ "x$1" = "x-i" ]] || [[ "x$1" = "x--instance" ]] ; then
 		shift
 		instance="$1"
-	elif [[ "x$directory" = "x" ]] ; then
+	elif ([[ "x$directory" = "x" ]] && [[ ! "x$1" =~ x-.* ]]) ; then
 		directory="$1"
 	else
 		unrecognized_arguments+=("$1")
@@ -48,6 +48,6 @@ find "$directory" -regextype posix-extended -iregex '.*[.]((mkv)|(mp4)|(avi)|(vm
 		continue
 	fi
 
-	"$worker" -i "$instance" "${unrecognized_arguments[@]}" unemployed "$filename" &
+	"$worker" -i "$instance" "${unrecognized_arguments[@]}" unemployed "$filename" \&
 	exit 0
 done

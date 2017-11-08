@@ -29,7 +29,6 @@ while [[ $# -gt 0 ]] ; do
 		shift
 		instance="$1"
 	elif [[ "x$1" = "x-r" ]] || [[ "x$1" = "x--replace" ]] ; then
-		shift
 		replace=0
 	elif [[ "x$cmd" = "x" ]] ; then
 		cmd="$1"
@@ -54,7 +53,7 @@ case "$cmd" in
 "unemployed")
 	if [[ -f "$pidfilename" ]] ; then
 		oldfile="$(cat "$pidfilename" | sed -r 's#^[^ ]+ ##g')"
-		if grep -- "$(basename "$binary")" "/proc/$pid/cmdline" 1>/dev/null 2>&1 ; then
+		if grep -E -- "($(basename "$binary"))|(ffmpeg)" "/proc/$pid/cmdline" 1>/dev/null 2>&1 ; then
 			kill -s SIGCONT "$pid"
 			err_exit 1 "Allready running on different? file"
 		fi
@@ -75,9 +74,13 @@ case "$cmd" in
 
 	rm -f "$pidfilename"
 	printf "%s %s\n" "$pid" "$filename" > "$pidfilename"
-	nice -n 19 "$ffmpegbinary" -i "$filename" -c:a copy -c:v libx265 -preset veryslow "$tmpfile" || err_exit 1 "FFmpeg failed"
+	nice -n 19 "$ffmpegbinary" -nostats -i "$filename" -c:a copy -c:v libx265 -preset veryslow "$tmpfile" &
+	pid=$!
+	printf "%s %s\n" "$pid" "$filename" > "$pidfilename"
+	wait $pid || err_exit 1 "FFmpeg failed"
+
 	( [[ ! -f "$tgtfile" ]] || [[ 0 = $replace ]] ) && mv "$tmpfile" "$tgtfile" || echo "target file still in place!" 1>&2
-	[[ "$tgtfile" != "$filename" ]] && rm "$filename" || echo "original file kept in place!" 1>&2
+	[[ "$tgtfile" != "$filename" ]] && rm "$filename" || echo "original file updated" 1>&2
 
 	rm "$pidfilename"
 	;;
