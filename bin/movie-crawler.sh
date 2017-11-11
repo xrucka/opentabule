@@ -48,6 +48,6 @@ find "$directory" -regextype posix-extended -iregex '.*[.]((mkv)|(mp4)|(avi)|(vm
 		continue
 	fi
 
-	"$worker" -i "$instance" "${unrecognized_arguments[@]}" unemployed "$filename" \&
+	screen -d -m bash -c "'$worker' -i '$instance' '${unrecognized_arguments[@]}' unemployed '$filename'"
 	exit 0
 done

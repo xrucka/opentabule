@@ -74,7 +74,7 @@ case "$cmd" in
 
 	rm -f "$pidfilename"
 	printf "%s %s\n" "$pid" "$filename" > "$pidfilename"
-	nice -n 19 "$ffmpegbinary" -nostats -i "$filename" -c:a copy -c:v libx265 -preset veryslow "$tmpfile" &
+	nice -n 19 "$ffmpegbinary" -i "$filename" -c:a copy -c:v libx265 -preset veryslow "$tmpfile" &
 	pid=$!
 	printf "%s %s\n" "$pid" "$filename" > "$pidfilename"
 	wait $pid || err_exit 1 "FFmpeg failed"
