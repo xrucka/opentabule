@@ -74,10 +74,13 @@ case "$cmd" in
 
 	rm -f "$pidfilename"
 	printf "%s %s\n" "$pid" "$filename" > "$pidfilename"
-	nice -n 19 "$ffmpegbinary" -i "$filename" -c:a copy -c:v libx265 -preset veryslow "$tmpfile" &
+	tmpfileb="/tmp/$$.$(basename "$filename")"
+	cp "$filename" "$tmpfileb"
+	nice -n 19 "$ffmpegbinary" -i "$tmpfileb" -c:a copy -c:v libx265 -preset veryslow "$tmpfile" &
 	pid=$!
 	printf "%s %s\n" "$pid" "$filename" > "$pidfilename"
 	wait $pid || err_exit 1 "FFmpeg failed"
+	rm "$tmpfileb"
 
 	( [[ ! -f "$tgtfile" ]] || [[ 0 = $replace ]] ) && mv "$tmpfile" "$tgtfile" || echo "target file still in place!" 1>&2
 	[[ "$tgtfile" != "$filename" ]] && rm "$filename" || echo "original file updated" 1>&2
