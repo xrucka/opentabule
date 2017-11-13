@@ -12,6 +12,7 @@ function err_exit(){
 binary="$0"
 worker="movie-crawler-worker.sh"
 instance=0
+executor="screen -d -m"
 directory=""
 tmpdir="/tmp"
 unrecognized_arguments=()
@@ -23,6 +24,8 @@ while [[ $# -gt 0 ]] ; do
 	elif [[ "x$1" = "x-i" ]] || [[ "x$1" = "x--instance" ]] ; then
 		shift
 		instance="$1"
+	elif [[ "x$1" = "x-f" ]] || [[ "x$1" = "x--foreground" ]] ; then
+		executor=
 	elif ([[ "x$directory" = "x" ]] && [[ ! "x$1" =~ x-.* ]]) ; then
 		directory="$1"
 	else
@@ -41,13 +44,14 @@ find "$directory" -regextype posix-extended -iregex '.*[.]((mkv)|(mp4)|(avi)|(vm
 	if (ffmpeg -i "$filename" |& grep -E 'Video:.*((libx265)|(hevc)|(h265))' 1>/dev/null 2>&1) ; then
 		continue
 	fi
+	echo $filename
 
 	# filename is a good candidate
-	if [[ $(( RANDOM % 10 )) -lt 5 ]] ; then
-		# not this time baby
+	if [[ "x$executor" != "x" ]] && [[ $(( RANDOM % 10 )) -lt 5 ]] ; then
+		# not this time baby, yet only when not running in foreground
 		continue
 	fi
 
-	screen -d -m bash -c "'$worker' -i '$instance' '${unrecognized_arguments[@]}' unemployed '$filename'"
+	$executor bash -c "'$worker' -i '$instance' '${unrecognized_arguments[@]}' unemployed '$filename'"
 	exit 0
 done
