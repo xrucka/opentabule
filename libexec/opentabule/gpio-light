@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import sys
 try:
-	from periphery import GPIO
+	from periphery import GPIO, GPIOError
 except RuntimeError:
 	print("Error importing gpio support (python periphery)!")
 
@@ -11,31 +11,42 @@ def GPIOLight(commands):
 	lightControlPin=458+17
 
 	pin = GPIO(lightControlPin, "preserve")
-	if (pin.direction != "out"):
+	if pin.direction != "out":
 		pin = GPIO(lightControlPin, "out")
 
 	def controlLight(state):
 		value = False
 
-		if (state == 0):
+		if state == 0:
 			value = False
-		elif (state == "off"):
+		elif state == "off":
 			value = False
-		elif (state == 1):
+		elif state == 1:
 			value = True
-		elif (state == "on"):
+		elif state == "on":
 			value = True
-		elif (state == "toggle"):
-			value = not pin.read()
+		elif state == "toggle":
+			try:
+				value = not pin.read()
+			except GPIOError:
+				value = True
+		elif state == "status":
+			try:
+				value = pin.read()
+			except GPIOError:
+				value = False
+			print("on" if value else "off")
+			return
 		else:
 			print("unknown state", state)
 			return
 
 		pin.write(value)
-		pin.close()
 
 	for command in commands:
 		controlLight(command)
+
+	pin.close()
 
 if __name__ == "__main__":
 	if (len(sys.argv) == 1):
